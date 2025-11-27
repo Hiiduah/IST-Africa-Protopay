@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_NAME=ptp
+      - DB_USER=ptp
+      - DB_PASSWORD=ptp
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DEBUG=true
+      - SECRET_KEY=change-me
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+      - media:/app/media
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=ptp
+      - POSTGRES_USER=ptp
+      - POSTGRES_PASSWORD=ptp
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
+  media:

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Procure-to-Pay</title>
+    <style>
+      body { font-family: system-ui, Arial; margin: 20px; }
+      .card { border: 1px solid #ddd; padding: 12px; margin: 10px 0; border-radius: 8px; }
+      input, select, button { margin: 4px 0; padding: 8px; }
+      .row { display: flex; gap: 12px; }
+      .col { flex: 1; }
+      .muted { color: #666; font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <h1>Procure-to-Pay Demo</h1>
+    <div id="auth">
+      <div class="card">
+        <h3>Login</h3>
+        <input id="username" placeholder="username" />
+        <input id="password" type="password" placeholder="password" />
+        <button onclick="login()">Login</button>
+        <div id="role" class="muted"></div>
+      </div>
+    </div>
+
+    <div id="actions" style="display:none;">
+      <div class="card">
+        <h3>Create Purchase Request</h3>
+        <input id="title" placeholder="Title" />
+        <input id="description" placeholder="Description" />
+        <input id="amount" placeholder="Amount" type="number" step="0.01" />
+        <div>
+          <label>Proforma (optional):</label>
+          <input id="proforma" type="file" />
+        </div>
+        <button onclick="createRequest()">Create</button>
+      </div>
+
+      <div class="card">
+        <h3>My/Pending Requests</h3>
+        <button onclick="loadRequests()">Refresh</button>
+        <div id="list"></div>
+      </div>
+    </div>
+
+    <script>
+      const API = '/api';
+      let token = null;
+      let userRole = null;
+
+      async function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const res = await fetch(`${API}/auth/token/`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.access) {
+          token = data.access;
+          document.getElementById('actions').style.display = 'block';
+          document.getElementById('role').innerText = 'Logged in';
+          loadRequests();
+        } else {
+          alert('Login failed');
+        }
+      }
+
+      async function createRequest() {
+        const form = new FormData();
+        form.append('title', document.getElementById('title').value);
+        form.append('description', document.getElementById('description').value);
+        form.append('amount', document.getElementById('amount').value || '0');
+        const file = document.getElementById('proforma').files[0];
+        if (file) form.append('proforma', file);
+        const res = await fetch(`${API}/requests/`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form });
+        if (res.ok) { loadRequests(); } else { alert('Create failed'); }
+      }
+
+      async function loadRequests() {
+        const res = await fetch(`${API}/requests/`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        const container = document.getElementById('list');
+        container.innerHTML = '';
+        data.forEach((r) => {
+          const div = document.createElement('div');
+          div.className = 'card';
+          div.innerHTML = `<b>#${r.id} ${r.title}</b> - ${r.status}<br/><span class='muted'>Amount: ${r.amount}</span>`;
+          if (r.status === 'pending') {
+            const approveBtn = document.createElement('button');
+            approveBtn.innerText = 'Approve';
+            approveBtn.onclick = async () => {
+              const res2 = await fetch(`${API}/requests/${r.id}/approve/`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}` } });
+              if (res2.ok) loadRequests(); else alert('Approve failed');
+            };
+            const rejectBtn = document.createElement('button');
+            rejectBtn.innerText = 'Reject';
+            rejectBtn.onclick = async () => {
+              const res2 = await fetch(`${API}/requests/${r.id}/reject/`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: 'No budget' }) });
+              if (res2.ok) loadRequests(); else alert('Reject failed');
+            };
+            div.appendChild(approveBtn); div.appendChild(rejectBtn);
+          }
+          const receiptInput = document.createElement('input'); receiptInput.type = 'file';
+          const submitBtn = document.createElement('button'); submitBtn.innerText = 'Submit Receipt';
+          submitBtn.onclick = async () => {
+            const form = new FormData(); form.append('receipt', receiptInput.files[0]);
+            const res3 = await fetch(`${API}/requests/${r.id}/submit-receipt/`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form });
+            const d3 = await res3.json(); alert('Receipt validation: ' + JSON.stringify(d3.validation));
+          };
+          div.appendChild(receiptInput); div.appendChild(submitBtn);
+          container.appendChild(div);
+        });
+      }
+    </script>
+  </body>
+  </html>
