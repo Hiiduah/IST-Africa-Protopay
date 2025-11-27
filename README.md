@@ -18,6 +18,19 @@ docker-compose up --build
 ```
 Visit `http://localhost:8000/api/docs/` for Swagger, and `http://localhost:8000/` for the minimal UI.
 
+### Build & Run with plain Docker
+```bash
+# Build image
+docker build -t ist-africa-protopay:local .
+
+# Run container (uses sqlite by default)
+docker run --rm -p 8080:8000 \
+  -e SECRET_KEY=change-me -e DEBUG=true \
+  --name ptp-app ist-africa-protopay:local
+
+# Open http://localhost:8080
+```
+
 ## Local (without Docker)
 ```bash
 python -m venv .venv && .venv/Scripts/activate  # Windows
@@ -63,6 +76,16 @@ You can deploy on Render/Fly.io/Railway/AWS EC2.
 Example `CMD` for production:
 ```Dockerfile
 CMD ["bash", "-lc", "python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:8000"]
+```
+
+### CI: GitHub Actions + GHCR
+This repo includes `.github/workflows/docker.yml` which builds and pushes image to GitHub Container Registry on pushes to `main`.
+- Image: `ghcr.io/<owner>/<repo>:latest`
+- Requires no extra secrets; uses `GITHUB_TOKEN` automatically.
+- Pull and run:
+```bash
+docker pull ghcr.io/<owner>/<repo>:latest
+docker run --rm -p 8080:8000 -e SECRET_KEY=change-me ghcr.io/<owner>/<repo>:latest
 ```
 
 ## Notes
