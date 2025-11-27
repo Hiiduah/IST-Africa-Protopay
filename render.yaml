@@ -13,3 +13,13 @@ services:
         value: ist-africa-protopay.onrender.com
       - key: DEBUG
         value: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
