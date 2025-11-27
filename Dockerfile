@@ -25,4 +25,5 @@ RUN mkdir -p /app/media /app/staticfiles
 
 EXPOSE 8000
 
-CMD ["bash", "-lc", "python manage.py migrate && python manage.py collectstatic --noinput || true && python manage.py runserver 0.0.0.0:8000"]
+# Run migrations and serve via gunicorn in production
+CMD ["bash", "-lc", "python manage.py migrate && python manage.py collectstatic --noinput || true && gunicorn config.wsgi:application --bind 0.0.0.0:8000"]

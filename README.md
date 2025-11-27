@@ -88,6 +88,17 @@ docker pull ghcr.io/<owner>/<repo>:latest
 docker run --rm -p 8080:8000 -e SECRET_KEY=change-me ghcr.io/<owner>/<repo>:latest
 ```
 
+### Render (one-click)
+- This repo includes `render.yaml` for Docker deploy.
+- Steps:
+  1) Create account on Render and click “New +” → “Web Service”.
+  2) Connect your GitHub repo `Hiiduah/IST-Africa-Protopay`.
+  3) Render will detect `render.yaml` and configure the service.
+  4) Set `SECRET_KEY` in Environment Variables.
+  5) Deploy (auto on push to `main`).
+- The service will expose a public URL, e.g., `https://ist-africa-protopay.onrender.com/`.
+- API docs: `https://<your-url>/api/docs/`.
+
 ## Notes
 - For OCR to work, container installs `tesseract-ocr`.
 - The extraction is heuristic; plug in an LLM/OpenAI for higher accuracy if desired.

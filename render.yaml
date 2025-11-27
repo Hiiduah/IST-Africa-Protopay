@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ist-africa-protopay
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    healthCheckPath: /api/docs/
+    envVars:
+      - key: SECRET_KEY
+        sync: false
+      - key: ALLOWED_HOSTS
+        value: ist-africa-protopay.onrender.com
+      - key: DEBUG
+        value: false
